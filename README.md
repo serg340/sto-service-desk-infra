@@ -224,20 +224,6 @@ docker compose up -d --force-recreate
 * Disk
 * Containers
 * Network
-
----
-
-# 🚀 Подальші покращення
-
-* reverse proxy (Nginx)
-* HTTPS для backend
-* rollback deployment
-* Grafana dashboards
-* Trivy image scanning
-* backup strategy
-* zero-downtime deploy
-* secrets management
-
 ---
 
 # 📌 Skills Demonstrated
