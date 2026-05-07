@@ -1,1 +1,84 @@
+variables:
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
+stages:
+  - build
+  - deploy_app
+  - deploy_prod
+
+build_image:
+  stage: build
+  image: docker:24.0.5
+
+  services:
+    - name: docker:24.0.5-dind
+      command: ["--insecure-registry=registry.stodesk.biz.ua"]
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login registry.stodesk.biz.ua -u "$CI_REGISTRY_USER" --password-stdin
+    - docker builder prune -f || true
+
+    - docker build -t registry.stodesk.biz.ua/$CI_PROJECT_PATH:$IMAGE_TAG .
+    - docker tag registry.stodesk.biz.ua/$CI_PROJECT_PATH:$IMAGE_TAG registry.stodesk.biz.ua/$CI_PROJECT_PATH:latest
+
+    - docker push registry.stodesk.biz.ua/$CI_PROJECT_PATH:$IMAGE_TAG
+    - docker push registry.stodesk.biz.ua/$CI_PROJECT_PATH:latest
+
+deploy_app:
+  stage: deploy_app
+  image: alpine:3.19
+  needs:
+    - build_image
+
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_PRIVATE_KEY" ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh-keyscan -H STAGING_SERVER >> ~/.ssh/known_hosts
+
+  script:
+    - |
+      ssh -i ~/.ssh/deploy_key dev@STAGING_SERVER "
+      echo '$CI_REGISTRY_PASSWORD' | docker login registry.stodesk.biz.ua -u '$CI_REGISTRY_USER' --password-stdin &&
+      cd /home/dev/sto-backend &&
+      export IMAGE_TAG=latest &&
+      docker compose pull &&
+      docker compose up -d
+      "
+
+  only:
+    - dev
+
+deploy_prod:
+  stage: deploy_prod
+  image: alpine:3.19
+  needs:
+    - build_image
+
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_PRIVATE_KEY" ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh-keyscan -H PRODUCTION_SERVER >> ~/.ssh/known_hosts
+
+  script:
+    - |
+      ssh -i ~/.ssh/deploy_key dev@PRODUCTION_SERVER << EOF
+      echo "$CI_REGISTRY_PASSWORD" | docker login registry.stodesk.biz.ua -u "$CI_REGISTRY_USER" --password-stdin
+      cd /home/dev/sto-backend
+      export IMAGE_TAG=$CI_COMMIT_SHORT_SHA
+      docker compose pull
+      docker compose up -d --force-recreate
+      EOF
+
+  only:
+    - main
+  when: manual
