@@ -250,3 +250,6 @@ docker compose up -d --force-recreate
 
 ## Application Server
 ![App Server](screenshots/app-server.png)
+
+## GitLab Runner
+![GitLab Runner](screenshots/gitlab-runner.png)
