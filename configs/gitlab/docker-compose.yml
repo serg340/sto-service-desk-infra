@@ -1,1 +1,32 @@
+services:
+  backend-dev:
+    image: registry.stodesk.biz.ua/sto-desk/sto-backend:latest
+    container_name: backend-dev
+    ports:
+      - "5000:8080"
+    restart: always
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backend-main:
+    image: registry.stodesk.biz.ua/sto-desk/sto-backend:${IMAGE_TAG}
+    container_name: backend-main
+    ports:
+      - "5001:8080"
+    restart: always
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
