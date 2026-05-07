@@ -107,3 +107,9 @@ docs/
 └── info.md
 
 screenshots/
+
+---
+
+## Infrastructure Diagram
+
+![Architecture](../screenshots/architecture.png)
