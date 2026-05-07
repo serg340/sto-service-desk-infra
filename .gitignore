@@ -1,1 +1,26 @@
+.env
+*.pem
+*.key
+*.crt
+*.pfx
+*.log
 
+# Docker
+docker-data/
+volumes/
+
+# Monitoring
+grafana-data/
+prometheus-data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary
+tmp/
+temp/
