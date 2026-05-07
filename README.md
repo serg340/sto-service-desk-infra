@@ -238,3 +238,15 @@ docker compose up -d --force-recreate
 * Infrastructure troubleshooting
 * Basic security hardening
 * Repository synchronization
+
+  ## CI/CD Pipeline
+![Pipeline](screenshots/pipeline.png)
+
+## Docker Infrastructure
+![Docker Infrastructure](screenshots/docker-containers.png)
+
+## Architecture
+![Architecture](screenshots/architecture.png)
+
+## Application Server
+![App Server](screenshots/app-server.png)
