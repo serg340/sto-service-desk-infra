@@ -51,9 +51,16 @@ Used for:
 
 ---
 
-## Monitoring Architecture
+## Screenshots
 
-```text
-Node Exporter ---> Grafana
-cAdvisor -------> Grafana
-Promtail --------> Grafana
+### Grafana Dashboard
+
+![Grafana Dashboard](../screenshots/grafana-dashboard.png)
+
+### Docker Containers
+
+![Docker Containers](../screenshots/docker-containers.png)
+
+### GitLab Runner
+
+![GitLab Runner](../screenshots/gitlab-runner.png)
