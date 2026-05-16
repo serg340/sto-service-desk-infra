@@ -1,155 +1,104 @@
-# STO Service Desk — Backend Infrastructure
+# 🚀 STO Service Desk — Backend Infrastructure
 
-Інфраструктура для дипломного проєкту — Service Desk системи для СТО.
-
-Проєкт охоплює повний цикл розгортання backend-застосунку:
-
-* контейнеризація через Docker
-* CI/CD автоматизація
-* staging та production deployment
-* використання GitLab Container Registry
-* моніторинг та логування
-* базова оптимізація інфраструктури
-* синхронізація GitHub ↔ self-hosted GitLab
+Інфраструктура для дипломного проєкту (Service Desk для СТО).
+Реалізовано повний цикл: **CI/CD → контейнеризація → деплой → моніторинг**
 
 ---
 
-# 🔄 Статус проєкту
+## 🔥 Основні можливості
 
-* Backend успішно розгорнуто на Staging Server
-* Production сервер налаштований та працює стабільно
-* GitLab CI/CD pipeline автоматизований
-* Використовується GitLab Container Registry
-* Реалізовано deploy через Docker Compose
-* Налаштовано monitoring stack
-* Проведено cleanup та optimization Docker Registry
-* Реалізовано синхронізацію GitHub ↔ GitLab
+* Docker, Docker Compose (containerized deployment)
+* GitLab CI/CD + Container Registry
+* Staging + Production середовища
+* Nginx reverse proxy + HTTPS (Let's Encrypt, DNS challenge)
+* Моніторинг (Node Exporter, cAdvisor, Promtail)
+* Оптимізація ресурсів
 
 ---
 
-# ✅ Key Features
+## 🔄 Статус
 
-* Self-hosted GitLab infrastructure
-* Automated CI/CD pipelines
-* Docker-based deployment
-* Separate staging and production environments
-* GitLab Container Registry integration
-* SSH-based deployment automation
-* Monitoring & logging stack
-* Docker Registry cleanup & optimization
-* Basic infrastructure hardening
-* Repository synchronization between GitHub and GitLab
+* Backend розгорнуто (staging + production)
+* CI/CD повністю автоматизовано
+* Реалізовано containerized деплой через Docker Compose
+* Налаштовано HTTPS (wildcard *.stodesk.biz.ua)
+* Моніторинг та оптимізація працюють
 
 ---
 
-# 🖥️ Сервери
+## 🖥️ Сервери
 
-| Сервер            | Роль                             |
-| ----------------- | -------------------------------- |
-| GitLab Server     | CI/CD + Registry + GitLab Runner |
-| Staging Server    | Dev / staging environment        |
-| Production Server | Production environment           |
+| Сервер | Роль                    | IP          |
+| ------ | ----------------------- | ----------- |
+| GitLab | CI/CD, Registry, Runner | 172.17.2.20 |
+| App    | Staging                 | 172.17.2.22 |
+| Prod   | Production              | 172.17.2.23 |
 
 ---
 
-# 🏗️ Архітектура
+## 🧠 Архітектура
 
 ```mermaid
 flowchart LR
 
-User[User]
-Dev[Developer]
+User --> NginxProd
+User --> NginxStaging
 
-subgraph GitLab_Server
-    GitLab[GitLab]
-    CICD[CI/CD Pipeline]
-    Runner[GitLab Runner]
-    Registry[Container Registry]
-end
+NginxProd --> BackendProd
+NginxStaging --> BackendStaging
 
-subgraph Production_Server
-    PrNginx[Nginx Docker]
-    PrBackend[Backend Docker]
-end
+Dev --> GitLab
+GitLab --> CI
+CI --> Registry
 
-subgraph Staging_Server
-    StNginx[Nginx Docker]
-    StBackend[Backend Docker]
-end
-
-User -->|HTTPS| PrNginx
-User -->|HTTPS| StNginx
-
-PrNginx -->|HTTP| PrBackend
-StNginx -->|HTTP| StBackend
-
-Dev -->|git push| GitLab
-GitLab --> CICD
-CICD --> Runner
-Runner -->|docker build + push| Registry
-
-Registry -->|docker pull| PrBackend
-Registry -->|docker pull| StBackend
+Registry --> BackendProd
+Registry --> BackendStaging
 ```
+
+
+**Flow (коротко):**
+Developer → Git push → GitLab → CI/CD → Docker build → Registry → Deploy → Nginx → Backend
 
 ---
 
-# 🔗 Взаємодія компонентів
+## 🔗 Взаємодія компонентів
 
 Developer
-→ Git push
-→ GitLab
+→ GitLab (push)
 → CI/CD pipeline
 → Docker build
 → Container Registry
 → SSH deploy
 → Docker Compose
 → Backend container
+→ Nginx
 
 ---
 
-# ⚙️ Використані технології
+## ⚙️ Технології
 
-* GitLab CE (self-hosted)
-* GitLab Runner (Docker executor)
+* GitLab CE (self-hosted), GitLab Runner
 * Docker / Docker Compose
 * Ubuntu Server
-* SSH (key-based authentication)
+* Nginx (reverse proxy)
 * .NET 8 (ASP.NET)
+* SSH (key-based auth)
 
-## 📊 Monitoring & Logging
-
-* Node Exporter
-* cAdvisor
-* Promtail
+**Моніторинг:** Node Exporter, cAdvisor, Promtail
 
 ---
 
-# 🔁 CI/CD Pipeline
+## 🔁 CI/CD
 
-## Flow
+**Flow:**
+push → pipeline → build → registry
 
-1. Push у гілку `dev` або `main`
-2. Запуск GitLab pipeline
-3. Build Docker image
-4. Push image у GitLab Container Registry
-5. Deploy через SSH
+**Deploy:**
 
----
+* staging — автоматично
+* production — manual
 
-## Staging Deploy
-
-* автоматичний deploy
-* використовується latest або commit-based tag
-* оновлення через Docker Compose
-
----
-
-## Production Deploy
-
-* manual deploy
-* використовується commit-based image tag
-* оновлення через:
+**Update:**
 
 ```bash
 docker compose pull
@@ -158,86 +107,91 @@ docker compose up -d --force-recreate
 
 ---
 
-# 🐳 Docker Deploy
-
-## Структура серверів
-
-```bash
-~/sto-backend
-├── docker-compose.yml
-└── .env
-```
-
-## Використання Docker Compose
+## 🐳 Docker
 
 * запуск backend контейнера
-* оновлення через image tag
-* healthcheck контейнера
-* автоматичний restart (`restart: always`)
+* versioning через image tag
+* healthcheck
+* restart: always
 
 ---
 
-# 🔄 Синхронізація репозиторіїв
+## 🚀 Production Experience
 
-Було реалізовано синхронізацію backend-репозиторіїв між GitHub та self-hosted GitLab.
-
-## Виконані задачі
-
-* налаштовано Git remotes
-* виправлено SSH access та known_hosts
-* синхронізовано dev та main гілки
-* виконано merge repository
-* вирішено merge conflicts у `.csproj`
-* виправлено dependency conflicts (.NET 8)
-* відновлено GitLab CI/CD pipeline
-* перевірено Docker build та deploy
-* оновлено README та architecture diagram
+* додано `/health` endpoint
+* post-deploy перевірка (curl)
+* виправлено доступ до Registry (deploy token)
+* стабільний деплой через CI/CD
 
 ---
 
-# 🧹 Оптимізація інфраструктури
+## 🌐 Nginx + HTTPS
 
-* очищено Docker Registry
-* налаштовано Cleanup Policy
-* виконано Garbage Collection
-* очищено зайві контейнери та runner-и
-* оптимізовано серверні ролі
-
----
-
-# 🔒 Безпека
-
-* SSH доступ тільки через ключі
-* password authentication вимкнено
-* приватні ключі зберігаються у GitLab CI/CD Variables
-* видалено небезпечні Git токени
-* використовується авторизація Container Registry через CI
+* окремий Docker-контейнер
+* reverse proxy
+* Let's Encrypt (DNS challenge)
+* wildcard сертифікат (*.stodesk.biz.ua)
 
 ---
 
-# 📊 Моніторинг
+## 🔐 Мережа
 
-## Метрики
+* ізольована мережа (172.17.x.x)
+* /etc/hosts для резолву
 
-* CPU
-* RAM
-* Disk
-* Containers
-* Network
+```
+172.17.2.22 api.stodesk.biz.ua
+172.17.2.20 gitlab.stodesk.biz.ua
+```
+
 ---
 
-# 📌 Skills Demonstrated
+## 🔒 Безпека
 
-* CI/CD automation
-* Docker containerization
-* Infrastructure management
-* GitLab administration
-* Docker Registry management
-* SSH deployment automation
-* Monitoring & logging
-* Infrastructure troubleshooting
-* Basic security hardening
-* Repository synchronization
+* SSH тільки по ключах
+* парольна авторизація вимкнена
+* CI/CD secrets у GitLab
+* registry auth через deploy token
+
+---
+
+## 🧹 Оптимізація
+
+* cleanup policy
+* garbage collection
+* docker prune
+* розділення ролей серверів
+
+---
+
+## 📊 Моніторинг
+
+CPU / RAM / disk / containers / network
+
+---
+
+## 💾 Backup
+
+* GitLab (repos, DB, registry)
+* конфіги (nginx, docker-compose, SSL)
+* окремий сервер
+
+**Формат:**
+
+```
+backup_YYYY-MM-DD.tar.gz
+```
+
+Відновлення через Docker Compose + Registry
+
+---
+
+## 📌 Висновок
+
+Проєкт демонструє практичну реалізацію DevOps підходів:
+CI/CD, Docker, інфраструктура, безпека, моніторинг та оптимізація.
+
+Інфраструктура стабільна та готова до масштабування.
 
   ## CI/CD Pipeline
 ![Pipeline](screenshots/pipeline.png)
